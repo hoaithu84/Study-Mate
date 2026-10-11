@@ -1,0 +1,17 @@
+{
+  "name": "studymate-pwa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "StudyMate PWA with scheduled push reminders for school assignments",
+  "main": "server.js",
+  "scripts": {
+    "setup": "node setup-vapid.js",
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "web-push": "^3.6.7"
+  }
+}

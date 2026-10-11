@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyMate - Trợ lý quản lý học tập</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#6658d3">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">S</div>
+      <div><b>StudyMate</b><span>Trợ lý học tập</span></div>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-page="dashboard">🏠 Tổng quan</button>
+      <button class="nav-btn" data-page="tasks">📝 Bài tập</button>
+      <button class="nav-btn" data-page="calendar">📅 Lịch học</button>
+      <button class="nav-btn" data-page="stats">📊 Tiến độ</button>
+    </nav>
+    <div class="tip">
+      <b>💡 Mẹo học tập</b>
+      <p>Ưu tiên những nhiệm vụ có deadline gần và mức độ quan trọng cao.</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 id="pageTitle">Tổng quan</h1>
+        <p id="today"></p>
+      </div>
+      <div class="header-actions">
+        <label class="reminder-setting">🔔 Nhắc trước
+          <select id="reminderOffset" aria-label="Chọn thời gian nhắc deadline">
+            <option value="30">30 phút</option><option value="60">1 giờ</option><option value="180">3 giờ</option><option value="360">6 giờ</option><option value="720" selected>12 giờ</option><option value="1440">1 ngày</option><option value="custom">Tùy chỉnh</option>
+          </select>
+        </label>
+        <label class="custom-reminder-setting" id="customReminderWrap" hidden>Tùy chỉnh (giờ)
+          <input id="customReminderHours" type="number" min="0.25" max="168" step="0.25" value="12" aria-label="Số giờ nhắc trước deadline">
+        </label>
+        <span id="pushStatus" class="push-status" role="status">Thông báo nền: chưa bật</span>
+        <button class="secondary" id="installAppBtn" type="button" hidden onclick="installStudyMate()">📲 Cài ứng dụng</button>
+        <button class="secondary" id="enableNotifications" type="button" onclick="enableNotifications()">🔔 Bật thông báo nền</button>
+        <button class="secondary" id="testPushBtn" type="button" hidden onclick="testPushNotification()">🧪 Thử thông báo</button>
+        <button class="primary" onclick="openModal()">＋ Thêm nhiệm vụ</button>
+      </div>
+    </header>
+
+    <section id="dashboard" class="page active">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">STUDYMATE</p>
+          <h2>Học đúng việc – Đúng thời gian – Không bỏ sót.</h2>
+          <p>Quản lý bài tập, deadline và tiến độ học tập trong một nơi.</p>
+        </div>
+        <div class="hero-icon">🎓</div>
+      </div>
+      <div id="warningBox"></div>
+      <div class="cards">
+        <div class="card"><span>📚 Tổng nhiệm vụ</span><strong id="totalCount">0</strong></div>
+        <div class="card"><span>⏳ Chưa hoàn thành</span><strong id="pendingCount">0</strong></div>
+        <div class="card"><span>✅ Đã hoàn thành</span><strong id="doneCount">0</strong></div>
+        <div class="card"><span>🔥 Ưu tiên cao</span><strong id="highCount">0</strong></div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head"><h3>Việc cần làm</h3><button class="text-btn" onclick="showPage('tasks')">Xem tất cả →</button></div>
+          <div id="dashboardTasks"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Tiến độ</h3></div>
+          <div class="progress-wrap">
+            <div class="progress-circle"><span id="progressPercent">0%</span></div>
+            <div><b id="progressText">0/0 nhiệm vụ hoàn thành</b><p>Hãy hoàn thành từng nhiệm vụ nhỏ để tiến gần mục tiêu.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tasks" class="page">
+      <div class="toolbar">
+        <input id="search" placeholder="🔎 Tìm bài tập..." oninput="renderTasks()">
+        <select id="filter" onchange="renderTasks()">
+          <option value="all">Tất cả</option>
+          <option value="pending">Chưa hoàn thành</option>
+          <option value="done">Đã hoàn thành</option>
+          <option value="high">Ưu tiên cao</option>
+        </select>
+      </div>
+      <div class="panel"><div id="taskList"></div></div>
+    </section>
+
+    <section id="calendar" class="page">
+      <div class="panel">
+        <h3>Lịch nhiệm vụ</h3>
+        <p class="muted">Các nhiệm vụ được sắp xếp theo deadline để bạn dễ theo dõi.</p>
+        <div id="calendarList"></div>
+      </div>
+    </section>
+
+    <section id="stats" class="page">
+      <div class="cards">
+        <div class="card"><span>Tỷ lệ hoàn thành</span><strong id="statRate">0%</strong></div>
+        <div class="card"><span>Nhiệm vụ ưu tiên cao</span><strong id="statHigh">0</strong></div>
+      </div>
+      <div class="stats-grid">
+        <div class="panel">
+          <div class="panel-head"><h3>Biểu đồ tiến độ tổng thể</h3><span class="muted">Cập nhật theo nhiệm vụ</span></div>
+          <div class="chart-overview">
+            <div id="statusDonut" class="status-donut" role="img" aria-label="Biểu đồ nhiệm vụ hoàn thành và chưa hoàn thành"><div class="donut-hole"><strong id="chartRate">0%</strong><span>hoàn thành</span></div></div>
+            <div class="chart-legend"><div><i class="legend-dot completed"></i><span>Đã hoàn thành</span><b id="chartDone">0</b></div><div><i class="legend-dot pending"></i><span>Chưa hoàn thành</span><b id="chartPending">0</b></div><div><i class="legend-dot overdue-legend"></i><span>Quá hạn</span><b id="chartOverdue">0</b></div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Tiến độ theo môn học</h3>
+          <p class="muted">So sánh số nhiệm vụ đã hoàn thành với tổng số nhiệm vụ của từng môn.</p>
+          <div id="subjectStats"></div>
+        </div>
+      </div>
+      <div class="panel feedback-panel">
+        <h3>💬 Góp ý để StudyMate tốt hơn</h3>
+        <p class="muted">Gửi góp ý ẩn danh. Đừng nhập mật khẩu, số điện thoại hoặc thông tin riêng tư.</p>
+        <form id="feedbackForm" class="feedback-form">
+          <label>Loại góp ý<select id="feedbackType"><option value="idea">Ý tưởng cải tiến</option><option value="bug">Báo lỗi</option><option value="good">Điểm mình thích</option></select></label>
+          <label>Nội dung<textarea id="feedbackMessage" rows="3" maxlength="1000" required placeholder="Ví dụ: Mình muốn có bộ lọc theo ngày..."></textarea></label>
+          <button class="primary" type="submit">Gửi góp ý</button><span id="feedbackStatus" class="muted" role="status"></span>
+        </form>
+        <div class="feedback-list-wrap"><h4>Góp ý gần đây</h4><div id="feedbackList"><p class="muted">Đang tải góp ý…</p></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal" class="modal">
+  <div class="modal-box">
+    <button class="close" onclick="closeModal()">×</button>
+    <h2>Thêm nhiệm vụ học tập</h2>
+    <form id="taskForm">
+      <label>Tên nhiệm vụ<input id="taskName" required placeholder="Ví dụ: Bài tập Toán chương 2"></label>
+      <label>Môn học<select id="subject"><option>Toán</option><option>Ngữ văn</option><option>Tiếng Anh</option><option>Vật lí</option><option>Hóa học</option><option>Sinh học</option><option>Lịch sử</option><option>Địa lí</option><option>Tin học</option><option>Khác</option></select></label>
+      <label>Deadline (ngày và giờ)<input id="deadline" type="datetime-local" required><small class="field-hint">Khi đã bật thông báo nền và máy chủ được cấu hình, StudyMate có thể nhắc theo thời gian bạn chọn ngay cả khi đóng tab.</small></label>
+      <label>Mức độ ưu tiên<select id="priority"><option value="high">Cao</option><option value="medium" selected>Vừa</option><option value="low">Thấp</option></select></label>
+      <label>File bài tập (không bắt buộc)<input id="taskFile" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt"><small class="field-hint">Chọn một file PDF, Word, ảnh hoặc TXT (tối đa 1,5 MB). File đính kèm lưu trên trình duyệt này, không gửi lên máy chủ.</small></label>
+      <button class="primary full" type="submit">Lưu nhiệm vụ</button>
+    </form>
+  </div>
+</div>
+<script src="script.js"></script>
+<script>if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) { window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js").catch(err => console.warn("Không đăng ký được service worker:", err))); }</script>
+</body>
+</html>
